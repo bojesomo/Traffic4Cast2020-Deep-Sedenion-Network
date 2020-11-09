@@ -1,0 +1,7 @@
+torch
+json
+pandas
+numpy
+torchvision
+h5py
+pytorch_model_summary
