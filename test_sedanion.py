@@ -127,8 +127,6 @@ for itr, idx in enumerate(df_used.index):
                 x_now = [x_[i:i+1].cuda() for x_ in x_test]
             else:
                 x_now = [x_[i:i + 1] for x_ in x_test]
-            if isinstance(model, UNet_3Plus):
-                x_now = torch.cat(x_now, dim=1)
             y_pred.append(model(x_now))
         y_pred = torch.cat(y_pred, dim=0)
 
