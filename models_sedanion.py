@@ -454,30 +454,35 @@ class EncodeBlock(nn.Module):
         # self.blocks = []
         self.input_shape = input_shape
         present_shape = input_shape
-        self.features = nn.Sequential()
+        # self.features = nn.Sequential()
         if opts.blk_type == 'resnet':
             for i in range(1, nb_layers):
                 blk = ModelBlock(present_shape, (3, 3), num_filters, 'regular',
                                  convArgs, bnArgs, actArgs)
-                self.features.add_module(f'block_{i}', blk)
+                # self.features.add_module(f'block_{i}', blk)
+                setattr(self, f'block_{i}', blk)
                 present_shape = blk.output_shape
 
             blk = ModelBlock(present_shape, (3, 3), num_filters, 'projection',
                              convArgs, bnArgs, actArgs)
-            self.features.add_module(f'block_{nb_layers}', blk)
+            # self.features.add_module(f'block_{nb_layers}', blk)
+            setattr(self, f'block_{nb_layers}', blk)
         else:  # densenet
             pool = layer_i != 1
             blk = ModelBlock(present_shape, (3, 3), num_filters,
                              convArgs, bnArgs, actArgs, nb_layers, pool)
             nb_layers = 1
-            self.features.add_module(f'block_{nb_layers}', blk)
+            # self.features.add_module(f'block_{nb_layers}', blk)
+            setattr(self, f'block_{nb_layers}', blk)
             
         exec(f"self.output_shape = blk.output_shape")
         if opts.dropout > 0.0:
             self.dropout = nn.Dropout2d(p=opts.dropout, inplace=True)
 
     def forward(self, x):
-        x = self.features(x)
+        # x = self.features(x)
+        for i in range(1, nb_layers + 1):
+            x = eval(f'self.block_{i}(x)')
         if opts.dropout > 0.0:
             x = self.dropout(x)
         return x  # self.x
