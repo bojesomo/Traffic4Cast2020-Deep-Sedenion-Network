@@ -27,7 +27,7 @@ import torch.multiprocessing as mp
 import torch
 import torch.nn as nn
 import torch.distributed as dist
-# torch.autograd.set_detect_anomaly(True)
+torch.autograd.set_detect_anomaly(True)
 
 from sedanion_loader import DataGenerator, ToTensor
 from models_sedanion import (SedanionModel, SedanionModelScaled, SedanionModelScaled2,
@@ -244,17 +244,17 @@ args_in.ckpt_path = ckpt_path
 args_in.time_code = time_code
 
 
-def multi_gpu_trainer_ddp(args_in):
+def trainer(args_in):
     parser2 = argparse.ArgumentParser()
     parser2.add_argument('-n', '--nodes', default=1, type=int, metavar='N',
                         help='number of data loading workers (default: 4)')
-    parser2.add_argument('-g', '--gpus', default=2, type=int,
-                        help='number of gpus per node')
+    # parser2.add_argument('-g', '--gpus', default=1, type=int,
+    #                     help='number of gpus per node')
     parser2.add_argument('-nr', '--nr', default=0, type=int,
                         help='ranking within the nodes')
     args = parser2.parse_args()
     args.args_in = args_in
-    args.world_size = args.gpus * args.nodes
+    # args.world_size = args.gpus * args.nodes
     args.directory = args_in.save_dir  # os.path.dirname(os.path.abspath(__file__))  # os.getcwd()
     args.logs_dir = os.path.join(args.directory, 'logs')
     args.best_dir = os.path.join(args.directory, 'best')
@@ -262,35 +262,38 @@ def multi_gpu_trainer_ddp(args_in):
     os.makedirs(args.logs_dir, exist_ok=True)
     os.makedirs(args.best_dir, exist_ok=True)
     os.makedirs(args.ckpt_dir, exist_ok=True)
-    os.environ['MASTER_ADDR'] = 'localhost'
-    os.environ['MASTER_PORT'] = '12355'
+    # os.environ['MASTER_ADDR'] = 'localhost'
+    # os.environ['MASTER_PORT'] = '12355'
     time_1 = datetime.now()
     # print(opts.epochs)
-    mp.spawn(train_ddp, nprocs=args.gpus, args=(args,))
-    print(f"Back from spawn in {str(datetime.now() - time_1)}")
+    # mp.spawn(train_ddp, nprocs=args.gpus, args=(args,))
+    train(args)
+    print(f"Back from trainer in {str(datetime.now() - time_1)}")
 
 
-def train_ddp(gpu, args):
+def train(args):
     logs_temp_file = os.path.join(args.logs_dir, '_'.join(['steps_log', args.args_in.time_code])+'.csv')
     epochs_temp_file = os.path.join(args.logs_dir, '_'.join(['epochs_log', args.args_in.time_code])+'.csv')
     CHECKPOINT_PATH = os.path.join(args.logs_dir, args.args_in.model_name)  # 'checkpoint.pt')
-    rank = args.nr * args.gpus + gpu
+    # rank = args.nr * args.gpus + gpu
     # print(rank)
-    dist.init_process_group(backend='nccl', init_method='env://', world_size=args.world_size, rank=rank)
-    torch.manual_seed(0)
-    print(f'initialied gpu {gpu}')
+    # dist.init_process_group(backend='nccl', init_method='env://', world_size=args.world_size, rank=rank)
+    # torch.manual_seed(0)
+    # print(f'initialied gpu {gpu}')
     model = args.args_in.model
     num_params = model.num_params
-    torch.cuda.set_device(gpu)
-    model.cuda(gpu)
+    # torch.cuda.set_device(gpu)
+    # model.cuda(gpu)
+    model = model.cuda()
     batch_size = opts.batch_size  # 100
-    criterion = args.args_in.criterion.cuda(gpu)
+    # criterion = args.args_in.criterion.cuda(gpu)
+    criterion = args.args_in.criterion.cuda()
     optimizer = args.args_in.optimizer  # torch.optim.SGD(model.parameters(), 1e-4)
-    # Wrap the model
-    model = nn.parallel.DistributedDataParallel(model, device_ids=[gpu], find_unused_parameters=True)
+    # # Wrap the model
+    # model = nn.parallel.DistributedDataParallel(model, device_ids=[gpu], find_unused_parameters=True)
 
     # load model if already exist
-    if rank == 0 and (os.path.exists(args.args_in.model_path) or os.path.exists(args.args_in.ckpt_path)):
+    if (os.path.exists(args.args_in.model_path) or os.path.exists(args.args_in.ckpt_path)):
         '''load the existing model accurately'''
         print('load the existing model accurately')
         if os.path.exists(args.args_in.model_path):
@@ -310,7 +313,7 @@ def train_ddp(gpu, args):
             model.load_state_dict(state_dict)
             del ckpt, state_dict
             torch.cuda.empty_cache()
-    elif rank == 0 and not os.path.exists(args.args_in.model_path):
+    else:
         print('Model does not exist in directory')
 
     start = datetime.now()
@@ -323,9 +326,9 @@ def train_ddp(gpu, args):
     steps_per_epoch = args.args_in.steps_per_epoch if args.args_in.steps_per_epoch else training_datagen.__len__()
     steps_per_validation = args.args_in.steps_per_validation if args.args_in.steps_per_validation else validation_datagen.__len__()
 
-    gpus = args.gpus  # torch.cuda.device_count()
-    steps_per_epoch //= gpus
-    steps_per_validation //= gpus
+    # gpus = args.gpus  # torch.cuda.device_count()
+    # steps_per_epoch //= gpus
+    # steps_per_validation //= gpus
 
     callbacks = args.args_in.callbacks
     metrics = args.args_in.metrics
@@ -343,7 +346,7 @@ def train_ddp(gpu, args):
 
     epoch_str_width = len(str(opts.epochs))
     best_loss = np.inf
-    group = dist.new_group([rank_i for rank_i in range(args.world_size)])
+    # group = dist.new_group([rank_i for rank_i in range(args.world_size)])
     # print(group)
     for epoch in range(args.args_in.initial_epoch, opts.epochs):
         training_datagen.on_epoch_end()
@@ -355,51 +358,29 @@ def train_ddp(gpu, args):
 
         """###### Training  ######## """
         for step in range(steps_per_epoch):
-            x, y = training_datagen.__getitem__(gpus * step + gpu)
+            # x, y = training_datagen.__getitem__(gpus * step + gpu)
+            x, y = training_datagen.__getitem__(step)
             if not opts.normalize_data:
                 x = [x_*255. for x_ in x]
                 y *= 255.
             x = [x_.cuda(non_blocking=True) for x_ in x]
             y = y.cuda(non_blocking=True)
 
-            if rank == 0:
-                # All processes should see same parameters as they all start from same
-                # random parameters and gradients are synchronized in backward passes.
-                # Therefore, saving it in one process is sufficient.
-                torch.save(model.state_dict(), CHECKPOINT_PATH)
-
-            # Use a barrier() to make sure that process 1 loads the model after process
-            # 0 saves it.
-            dist.barrier()
-            # configure map_location properly
-            map_location = {'cuda:%d' % 0: 'cuda:%d' % rank}
-            model.load_state_dict(
-                torch.load(CHECKPOINT_PATH, map_location=map_location))
-
             # Forward pass
             optimizer.zero_grad()
-            output = model(torch.cat(x, dim=1)) if isinstance(args.args_in.model, UNet_3Plus) else model(x)
+            output = model(x)
             if not opts.normalize_data:
                 output = output * 255.
             loss = criterion(output, y)
-
-            dist.all_reduce(loss, op=dist.ReduceOp.SUM, group=group)
-            loss = loss / args.world_size
 
             # Backward and optimize
             # optimizer.zero_grad()
             loss.backward()
             optimizer.step()
             with torch.no_grad():
-                # train_dict.update({metric.name: metric(output, y)for metric in metrics})
-                # train_dict.update({metric.name: dist.all_reduce(train_dict[metric.name]/args.world_size,
-                #                                                 op=dist.ReduceOp.SUM,  group=group).item()
-                #                    for metric in metrics})
                 for metric in metrics:
                     temp = metric(output, y)
-                    # print(metric.name, temp)
-                    dist.all_reduce(temp, op=dist.ReduceOp.SUM,  group=group)
-                    train_dict.update({metric.name: temp.item()/args.world_size})
+                    train_dict.update({metric.name: temp.item()})
                 del x, y, output, temp
                 torch.cuda.empty_cache()
                 # for idx, metric in enumerate(metrics):
@@ -407,31 +388,23 @@ def train_ddp(gpu, args):
             train_dict['loss'] = loss.item()
             train_df = train_df.append(train_dict, ignore_index=True)
 
-            # Not necessary to use a dist.barrier() to guard the file deletion below
-            # as the AllReduce ops in the backward pass of DDP already served as
-            # a synchronization.
-
-            # if rank == 0:
-            #     os.remove(CHECKPOINT_PATH)
             time_so_far = (time.time() - start_time)
             step_time = time_so_far / (step + 1)
-            if verbose >= 1 and gpu == 0:
+            if verbose >= 1:
                 time_spent_str = time_to_str(time_so_far)
                 time_str = time_to_str(step_time * (steps_per_epoch - step))
                 other_str = ' - '.join([f"{key}: {value:0.5f}" for key, value in train_dict.items()])
                 print(f'Epoch [{epoch+1}/{opts.epochs}] - Step [{step + 1}/{steps_per_epoch}] - ETA: '
                       f'[{time_spent_str}<{time_str}] - {other_str}', end='\r')
 
-            if rank == 0:
-                # logs_temp = {'Epoch': epoch + 1, 'Step': step + 1, 'Loss': loss.item()}
-                logs_temp = {'Epoch': epoch + 1, 'Step': step + 1}
-                logs_temp.update(train_dict)
-                logs_temp['city'] = opts.city.lower()
-                logs_temp_df = pd.DataFrame([logs_temp])
-                if os.path.exists(logs_temp_file):
-                    logs_temp_df.to_csv(logs_temp_file, mode='a', index=False, header=False)
-                else:
-                    logs_temp_df.to_csv(logs_temp_file, mode='a', index=False)
+            logs_temp = {'Epoch': epoch + 1, 'Step': step + 1}
+            logs_temp.update(train_dict)
+            logs_temp['city'] = opts.city.lower()
+            logs_temp_df = pd.DataFrame([logs_temp])
+            if os.path.exists(logs_temp_file):
+                logs_temp_df.to_csv(logs_temp_file, mode='a', index=False, header=False)
+            else:
+                logs_temp_df.to_csv(logs_temp_file, mode='a', index=False)
         # del x, y, output, temp
         # torch.cuda.empty_cache()
 
@@ -459,10 +432,6 @@ def train_ddp(gpu, args):
                 if not opts.normalize_data:
                     output = output * 255.
                 val_loss = criterion(output, y)
-                # validation_dict.update({metric.name: metric(output, y) for metric in metrics})
-                # validation_dict.update({metric.name: dist.all_reduce(validation_dict[metric.name]/args.world_size,
-                #                                                      op=dist.ReduceOp.SUM, group=group).item()
-                #                         for metric in metrics})
                 for metric in metrics:
                     temp = metric(output, y)
                     dist.all_reduce(temp, op=dist.ReduceOp.SUM,  group=group)
@@ -489,65 +458,59 @@ def train_ddp(gpu, args):
             for callback in callbacks:
                 callback.step(logs['val_loss'])
 
-        if gpu == 0:
-            other_str = ' - '.join([f"{key}: {value:0.6f}" for key, value in logs.items() if not isinstance(value, str)])
-            print(f'epoch {epoch + 1:0{epoch_str_width}d}/{epochs} -- {other_str}')
+        other_str = ' - '.join([f"{key}: {value:0.6f}" for key, value in logs.items() if not isinstance(value, str)])
+        print(f'epoch {epoch + 1:0{epoch_str_width}d}/{epochs} -- {other_str}')
 
         """Updating the epoch log state"""
-        if rank == 0:
-            # epochs_temp = {'Epoch': epoch + 1}
-            # epochs_temp.update(logs)
-            # epochs_temp_df = pd.DataFrame([epochs_temp])
-            epochs_temp_df = pd.DataFrame([logs])
-            if os.path.exists(epochs_temp_file):
-                epochs_temp_df.to_csv(epochs_temp_file, mode='a', index=False, header=False)
-            else:
-                epochs_temp_df.to_csv(epochs_temp_file, mode='a', index=False)
+        epochs_temp_df = pd.DataFrame([logs])
+        if os.path.exists(epochs_temp_file):
+            epochs_temp_df.to_csv(epochs_temp_file, mode='a', index=False, header=False)
+        else:
+            epochs_temp_df.to_csv(epochs_temp_file, mode='a', index=False)
 
         """Saving the ckpts"""
-        if rank == 0:
-            checkpoint = {'state_dict': model.state_dict(),
-                          'optimizer': optimizer.state_dict()}
-            torch.save(checkpoint, args.args_in.ckpt_path.replace('.', f'_ckpt{epoch+1}.'))
+        checkpoint = {'state_dict': model.state_dict(),
+                      'optimizer': optimizer.state_dict()}
+        torch.save(checkpoint, args.args_in.ckpt_path.replace('.', f'_ckpt{epoch + 1}.'))
 
         """Saving the present best model"""
         present_best_loss = logs['val_mse'] if 'val_mse' in logs else logs['val_loss']
-        if rank == 0:
-            if present_best_loss < best_loss:
-                # saving the best checkpoint
-                checkpoint = {'state_dict': model.state_dict(),
-                              'optimizer': optimizer.state_dict()}
+        if present_best_loss < best_loss:
+            # saving the best checkpoint
+            checkpoint = {'state_dict': model.state_dict(),
+                          'optimizer': optimizer.state_dict()}
 
-                torch.save(checkpoint, args.args_in.model_path)
-                # torch.save(checkpoint, os.paths.join(args.best, args.args_in.model_name + '.pt')) #also accepted
-                print(f'The model improves from {best_loss:0.6f} to {present_best_loss:0.6f} and has been saved in'
-                      f' {args.args_in.model_path}')
-                best_loss = present_best_loss
-            else:
-                print(f'The model does not improve from {best_loss:0.6f}')
-    if gpu == 0:
-        # Save the logs
-        if os.path.exists(args.args_in.model_path[:-3]+'.csv'):
-            logs_df.to_csv(args.args_in.model_path[:-3]+'.csv', mode='a', index=False, header=False)
+            torch.save(checkpoint, args.args_in.model_path)
+            # torch.save(checkpoint, os.paths.join(args.best, args.args_in.model_name + '.pt')) #also accepted
+            print(f'The model improves from {best_loss:0.6f} to {present_best_loss:0.6f} and has been saved in'
+                  f' {args.args_in.model_path}')
+            best_loss = present_best_loss
         else:
-            logs_df.to_csv(args.args_in.model_path[:-3]+'.csv', mode='a', index=False)
-        # Save the last state of the model
-        checkpoint = {'state_dict': model.state_dict(),
-                      'optimizer': optimizer.state_dict()}
-        torch.save(checkpoint, CHECKPOINT_PATH)
-        # save model parameters used
-        readme_file = os.path.join(save_dir, 'SedanionScaledReadMe.csv')
-        opts_dict = vars(argparse.Namespace(**{'filename': args.args_in.model_name[:-3], 'num_params': num_params,
-                                               'val_mse': best_loss}, **vars(opts)))
-        # opts_dict = vars(argparse.Namespace(**{'filename': model_name[:-3], 'num_params': num_params,
-        #                                        'val_loss': best_loss}, **vars(opts)))
-        opts_df = pd.DataFrame([opts_dict])
-        if os.path.exists(readme_file):
-            opts_df.to_csv(readme_file, mode='a', index=False, header=False)
-        else:
-            opts_df.to_csv(readme_file, mode='a', index=False)
-        print("Training complete in: " + str(datetime.now() - start))
+            print(f'The model does not improve from {best_loss:0.6f}')
+
+    # Save the logs
+    if os.path.exists(args.args_in.model_path[:-3] + '.csv'):
+        logs_df.to_csv(args.args_in.model_path[:-3] + '.csv', mode='a', index=False, header=False)
+    else:
+        logs_df.to_csv(args.args_in.model_path[:-3] + '.csv', mode='a', index=False)
+    # Save the last state of the model
+    checkpoint = {'state_dict': model.state_dict(),
+                  'optimizer': optimizer.state_dict()}
+    torch.save(checkpoint, CHECKPOINT_PATH)
+    # save model parameters used
+    readme_file = os.path.join(save_dir, 'SedanionScaledReadMe.csv')
+    opts_dict = vars(argparse.Namespace(**{'filename': args.args_in.model_name[:-3], 'num_params': num_params,
+                                           'val_mse': best_loss}, **vars(opts)))
+    # opts_dict = vars(argparse.Namespace(**{'filename': model_name[:-3], 'num_params': num_params,
+    #                                        'val_loss': best_loss}, **vars(opts)))
+    opts_df = pd.DataFrame([opts_dict])
+    if os.path.exists(readme_file):
+        opts_df.to_csv(readme_file, mode='a', index=False, header=False)
+    else:
+        opts_df.to_csv(readme_file, mode='a', index=False)
+    print("Training complete in: " + str(datetime.now() - start))
+
 
 
 if __name__ == '__main__':
-    multi_gpu_trainer_ddp(args_in)
+    trainer(args_in)
