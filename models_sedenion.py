@@ -591,7 +591,7 @@ class SedenionModel(nn.Module):
         self.dynamic_shape = (None, n_frame_in * n_channels, *frame_shape)
         self.static_shape = (None, 7, *frame_shape)
         self.z0_shape = (None, 16 * n_channels, *frame_shape)
-        n_multiples_out = 16 * n_channels_out  # n_divs = 16 for sedanion
+        n_multiples_out = 16 * n_channels_out  # n_divs = 16 for sedenion
 
         # Stage 1 - Vector learning and preparation
         self.static_learn = LearnVectorBlock(self.static_shape, n_channels, (3, 3), actArgs, bnArgs, block_i=1)
@@ -699,9 +699,9 @@ class SedenionModelScaled(nn.Module):
         self.dynamic_shape = (None, n_frame_in * n_channels, *frame_shape)
         self.static_shape = (None, 8, *frame_shape) if opts.use_time_slot else (None, 7, *frame_shape)
         self.z0_shape = (None, 16 * n_channels, *frame_shape)
-        assert n_divs in [16, 1]  # only real or sedanion implemented
+        assert n_divs in [16, 1]  # only real or sedenion implemented
         if n_divs == 16:
-            n_multiples_out = 16 * n_channels_out  # n_divs = 16 for sedanion
+            n_multiples_out = 16 * n_channels_out  # n_divs = 16 for sedenion
         else:
             n_multiples_out = n_frame_out * n_channels_out
 
@@ -808,9 +808,9 @@ class SedenionModelScaled2(nn.Module):
         self.num_params = 0
         self.dynamic_shape = (None, n_frame_in * n_channels, *frame_shape)
         self.static_shape = (None, 8, *frame_shape) if opts.use_time_slot else (None, 7, *frame_shape)
-        assert n_divs in [16, 1]  # only real or sedanion implemented
+        assert n_divs in [16, 1]  # only real or sedenion implemented
         if n_divs == 16:
-            n_multiples_out = 16 * n_channels_out  # n_divs = 16 for sedanion
+            n_multiples_out = 16 * n_channels_out  # n_divs = 16 for sedenion
         else:
             n_multiples_out = n_frame_out * n_channels_out
 
