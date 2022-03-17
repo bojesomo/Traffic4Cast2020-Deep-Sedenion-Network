@@ -27,8 +27,8 @@ from torch.optim.lr_scheduler import ReduceLROnPlateau
 from torch.utils.data import DataLoader
 from torch.nn import Conv2d as RealConv2D
 
-from hypercomplex import ComplexConv2D, QuaternionConv2D, OctonionConv2D, SedanionConv2D
-from hypercomplex import ComplexLinear, QuaternionLinear, OctonionLinear, SedanionLinear, get_c
+from hypercomplex import ComplexConv2D, QuaternionConv2D, OctonionConv2D, SedenionConv2D
+from hypercomplex import ComplexLinear, QuaternionLinear, OctonionLinear, SedenionLinear, get_c
 
 torch.cuda.empty_cache()
 
@@ -85,7 +85,7 @@ def setup_model():
     stack_input = opts.stack_input
     city_name = opts.city.upper()
 
-    net_dict = {'seda': 'sedanion', 'octo': 'octonion', 'quat': 'quaternion', 'comp': 'complex', 'real': 'real'}
+    net_dict = {'sede': 'sedenion', 'octo': 'octonion', 'quat': 'quaternion', 'comp': 'complex', 'real': 'real'}
     net_type = net_dict[opts.net_type.lower()[:4]]
     # Details here
     hidden_activation = opts.hidden_activation
@@ -127,7 +127,7 @@ def setup_model():
 
     data_root = opts.data_root
 
-    if net_type == 'sedanion':
+    if net_type == 'sedenion':
         n_divs = 16
     elif net_type == 'octonion':
         n_divs = 8
@@ -149,10 +149,10 @@ def setup_model():
     def concatenate_real(x):
         return torch.cat(x, dim=1)
 
-    if net_type == 'sedanion':
-        ModelConv2D = SedanionConv2D
-        ModelBN = BatchNorm2d  # SedanionBN
-        ModelLinear = SedanionLinear
+    if net_type == 'sedenion':
+        ModelConv2D = SedenionConv2D
+        ModelBN = BatchNorm2d  # SedenionBN
+        ModelLinear = SedenionLinear
         concatenate_m = concatenate_m
     elif net_type == 'octonion':
         ModelConv2D = OctonionConv2D
@@ -579,9 +579,9 @@ class DecodeBlock(nn.Module):
         return f'decode_block_{self.layer_i}'
 
 
-class SedanionModel(nn.Module):
+class SedenionModel(nn.Module):
     def __init__(self):  # , stack_input=True):
-        super(SedanionModel, self).__init__()
+        super(SedenionModel, self).__init__()
         """" implement a model refresher here based on settings.options without model reloading """
         setup_model()
 
@@ -687,9 +687,9 @@ class SedanionModel(nn.Module):
         self.metrics = [MAE(), RMSE(), RMSLE(), NDEI(), R2_SCORE(), MAAPE()]
 
 
-class SedanionModelScaled(nn.Module):
+class SedenionModelScaled(nn.Module):
     def __init__(self):  # , stack_input=True):
-        super(SedanionModelScaled, self).__init__()
+        super(SedenionModelScaled, self).__init__()
         """" implement a model refresher here based on settings.options without model reloading """
         setup_model()
 
@@ -797,9 +797,9 @@ class SedanionModelScaled(nn.Module):
         self.metrics = [MAE(), RMSE(), RMSLE(), NDEI(), R2_SCORE(), MAAPE()]
 
 
-class SedanionModelScaled2(nn.Module):
+class SedenionModelScaled2(nn.Module):
     def __init__(self):  # , stack_input=True):
-        super(SedanionModelScaled2, self).__init__()
+        super(SedenionModelScaled2, self).__init__()
         """" implement a model refresher here based on settings.options without model reloading """
         setup_model()
 
