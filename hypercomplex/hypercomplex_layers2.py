@@ -442,50 +442,50 @@ class OctonionConv3D(HyperConv):
         return config.replace(f', num_components={str(self.num_components)}', '')
 
 
-class SedanionConv1D(HyperConv):
+class SedenionConv1D(HyperConv):
 
     def __init__(self, in_channels, out_channels, kernel_size, stride,  # num_components=8,
                  dilation=1, padding=0, groups=1, bias=True, ):
-        super(SedanionConv1D, self).__init__(in_channels, out_channels, kernel_size, stride,
+        super(SedenionConv1D, self).__init__(in_channels, out_channels, kernel_size, stride,
                                              dilation=dilation, padding=padding,
                                              groups=groups, bias=bias,
                                              num_components=16, operation='convolution1d',
                                              )
 
     def __repr__(self):
-            config = super(SedanionConv1D, self).__repr__()
+            config = super(SedenionConv1D, self).__repr__()
             config = config.replace(f', operation={str(self.operation)}', '')
             return config.replace(f', num_components={str(self.num_components)}', '')
 
 
-class SedanionConv2D(HyperConv):
+class SedenionConv2D(HyperConv):
 
     def __init__(self, in_channels, out_channels, kernel_size, stride,  # num_components=8,
                  dilation=1, padding=0, groups=1, bias=True, ):
-        super(SedanionConv2D, self).__init__(in_channels, out_channels, kernel_size, stride,
+        super(SedenionConv2D, self).__init__(in_channels, out_channels, kernel_size, stride,
                                              dilation=dilation, padding=padding,
                                              groups=groups, bias=bias,
                                              num_components=16, operation='convolution2d',
                                              )
 
     def __repr__(self):
-        config = super(SedanionConv2D, self).__repr__()
+        config = super(SedenionConv2D, self).__repr__()
         config = config.replace(f', operation={str(self.operation)}', '')
         return config.replace(f', num_components={str(self.num_components)}', '')
 
 
-class SedanionConv3D(HyperConv):
+class SedenionConv3D(HyperConv):
 
     def __init__(self, in_channels, out_channels, kernel_size, stride,  # num_components=8,
                  dilation=1, padding=0, groups=1, bias=True, ):
-        super(SedanionConv3D, self).__init__(in_channels, out_channels, kernel_size, stride,
+        super(SedenionConv3D, self).__init__(in_channels, out_channels, kernel_size, stride,
                                              dilation=dilation, padding=padding,
                                              groups=groups, bias=bias,
                                              num_components=16, operation='convolution3d',
                                              )
 
     def __repr__(self):
-        config = super(SedanionConv3D, self).__repr__()
+        config = super(SedenionConv3D, self).__repr__()
         config = config.replace(f', operation={str(self.operation)}', '')
         return config.replace(f', num_components={str(self.num_components)}', '')
 
@@ -526,13 +526,13 @@ class OctonionLinear(HyperLinear):
         return config
 
 
-class SedanionLinear(HyperLinear):
+class SedenionLinear(HyperLinear):
 
     def __init__(self, in_features, out_features,  # num_components=8,
                  bias=True,):
-        super(SedanionLinear, self).__init__(in_features, out_features, num_components=16, bias=bias,)
+        super(SedenionLinear, self).__init__(in_features, out_features, num_components=16, bias=bias,)
 
     def __repr__(self):
-        config = super(SedanionLinear, self).__repr__()
+        config = super(SedenionLinear, self).__repr__()
         config = config.replace(f', num_components={str(self.num_components)}', '')
         return config
