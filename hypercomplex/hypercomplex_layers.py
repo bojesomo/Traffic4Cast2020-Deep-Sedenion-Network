@@ -531,14 +531,14 @@ class OctonionConv3D(HyperConv):
         return config
 
 
-class SedanionConv1D(HyperConv):
+class SedenionConv1D(HyperConv):
 
     def __init__(self, in_channels, out_channels, kernel_size, stride,  # num_components=8,
                  dilation=1, padding=0, groups=1, bias=True, init_criterion='glorot',
                  weight_init='hypercomplex', seed=None,  # rotation=False,
                  hypercomplex_format=True,
                  scale=False):
-        super(SedanionConv1D, self).__init__(in_channels, out_channels, kernel_size, stride,
+        super(SedenionConv1D, self).__init__(in_channels, out_channels, kernel_size, stride,
                                             dilation=dilation, padding=padding,
                                             groups=groups, bias=bias, init_criterion=init_criterion,
                                             weight_init=weight_init, seed=seed,
@@ -547,19 +547,19 @@ class SedanionConv1D(HyperConv):
                                             scale=scale)
 
     def __repr__(self):
-            config = super(SedanionConv1D, self).__repr__()
+            config = super(SedenionConv1D, self).__repr__()
             config.replace(f', operation={str(self.operation)}', '')
             return config
 
 
-class SedanionConv2D(HyperConv):
+class SedenionConv2D(HyperConv):
 
     def __init__(self, in_channels, out_channels, kernel_size, stride,  # num_components=8,
                  dilation=1, padding=0, groups=1, bias=True, init_criterion='glorot',
                  weight_init='hypercomplex', seed=None,  # rotation=False,
                  hypercomplex_format=True,
                  scale=False):
-        super(SedanionConv2D, self).__init__(in_channels, out_channels, kernel_size, stride,
+        super(SedenionConv2D, self).__init__(in_channels, out_channels, kernel_size, stride,
                                             dilation=dilation, padding=padding,
                                             groups=groups, bias=bias, init_criterion=init_criterion,
                                             weight_init=weight_init, seed=seed,
@@ -568,19 +568,19 @@ class SedanionConv2D(HyperConv):
                                             scale=scale)
 
     def __repr__(self):
-        config = super(SedanionConv2D, self).__repr__()
+        config = super(SedenionConv2D, self).__repr__()
         config.replace(f', operation={str(self.operation)}', '')
         return config
 
 
-class SedanionConv3D(HyperConv):
+class SedenionConv3D(HyperConv):
 
     def __init__(self, in_channels, out_channels, kernel_size, stride,  # num_components=8,
                  dilation=1, padding=0, groups=1, bias=True, init_criterion='glorot',
                  weight_init='hypercomplex', seed=None,  # rotation=False,
                  hypercomplex_format=True,
                  scale=False):
-        super(SedanionConv3D, self).__init__(in_channels, out_channels, kernel_size, stride,
+        super(SedenionConv3D, self).__init__(in_channels, out_channels, kernel_size, stride,
                                             dilation=dilation, padding=padding,
                                             groups=groups, bias=bias, init_criterion=init_criterion,
                                             weight_init=weight_init, seed=seed,
@@ -589,7 +589,7 @@ class SedanionConv3D(HyperConv):
                                             scale=scale)
 
     def __repr__(self):
-        config = super(SedanionConv3D, self).__repr__()
+        config = super(SedenionConv3D, self).__repr__()
         config.replace(f', operation={str(self.operation)}', '')
         return config
 
@@ -627,13 +627,13 @@ class OctonionLinear(HyperLinear):
                                              seed=seed)
 
 
-class SedanionLinear(HyperLinear):
+class SedenionLinear(HyperLinear):
 
     def __init__(self, in_features, out_features,  # num_components=8,
                  bias=True,
                  init_criterion='he', weight_init='hypercomplex',
                  seed=None):
-        super(SedanionLinear, self).__init__(in_features, out_features, num_components=16, bias=bias,
+        super(SedenionLinear, self).__init__(in_features, out_features, num_components=16, bias=bias,
                                              init_criterion=init_criterion, weight_init=weight_init,
                                              seed=seed)
 
