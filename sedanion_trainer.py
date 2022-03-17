@@ -30,7 +30,7 @@ import torch.distributed as dist
 torch.autograd.set_detect_anomaly(True)
 
 from sedanion_loader import DataGenerator, ToTensor
-from models_sedanion import (SedanionModel, SedanionModelScaled, SedanionModelScaled2,
+from models_sedanion import (SedenionModel, SedenionModelScaled, SedenionModelScaled2,
                                                       optimizer_dict, criterion_dict)
 import tempfile
 from torch.nn.parallel import DistributedDataParallel as DDP
@@ -42,7 +42,7 @@ parser = argparse.ArgumentParser()
 parser.add_argument('--stack_input', type=bool, default=True, help='is the input to be stacked [True, False]')
 parser.add_argument('--use_group_norm', type=bool, default=False, help='is the input to be stacked [True, False]')
 parser.add_argument('--use_time_slot', type=bool, default=False, help='use the time slots encoding')
-parser.add_argument('--net_type', default='sedanion', help='type of network', choices=['sedanion', 'real'])
+parser.add_argument('--net_type', default='sedenion', help='type of network', choices=['sedenion', 'real'])
 parser.add_argument('--blk_type', default='resnet', help='type of block', choices=['resnet', 'densenet'])
 parser.add_argument('--nb_layers', type=int, default=1, help='depth of resnet/densenet blocks')  # 3
 # working on sf divisible by 16
@@ -176,7 +176,7 @@ print(f'validation datagen loaded in {time.time() - start_time} seconds')
 # GET MODEL
 start_time = time.time()
 settings.init(opts)  # add opts to global variables {required before calling FullModel
-model = SedanionModelScaled() 
+model = SedenionModelScaled() 
 model_time = time.time() - start_time
 if opts.use_time_slot:
     x_in = (torch.rand(1, 108, 495, 436), torch.rand(1, 8, 495, 436))
@@ -498,7 +498,7 @@ def train(args):
                   'optimizer': optimizer.state_dict()}
     torch.save(checkpoint, CHECKPOINT_PATH)
     # save model parameters used
-    readme_file = os.path.join(save_dir, 'SedanionScaledReadMe.csv')
+    readme_file = os.path.join(save_dir, 'SedenionScaledReadMe.csv')
     opts_dict = vars(argparse.Namespace(**{'filename': args.args_in.model_name[:-3], 'num_params': num_params,
                                            'val_mse': best_loss}, **vars(opts)))
     # opts_dict = vars(argparse.Namespace(**{'filename': model_name[:-3], 'num_params': num_params,
