@@ -8,9 +8,9 @@
 ##########################################################
 
 import settings
-from sedanion_loader import DataGenerator, ToCuda, ToTensor
+from sedenion_loader import DataGenerator, ToCuda, ToTensor
 from utils import time_to_str
-from models_sedanion import SedanionModel, SedanionModelScaled, SedanionModelScaled2
+from models_sedenion import SedenionModel, SedenionModelScaled, SedenionModelScaled2
 import torch
 import time
 import os
@@ -43,7 +43,7 @@ with open('test_slots.json') as json_file:
     for test_point in test_list:
         test_slots.update(test_point)
 
-fname = os.path.join('saved_models', 'SedanionReadMe.csv')
+fname = os.path.join('saved_models', 'SedenionReadMe.csv')
 checkpoint_dir = os.path.join('saved_models', 'best')
 
 df = pd.read_csv(fname)
@@ -75,7 +75,7 @@ for itr, idx in enumerate(df_used.index):
 
     settings.init(opts)  # add opts to global variables
 
-    model = SedanionModelScaled()  # get the model
+    model = SedenionModelScaled()  # get the model
     
     '''load the checkpoint accurately'''
     ckpt = torch.load(checkpoint_path)
