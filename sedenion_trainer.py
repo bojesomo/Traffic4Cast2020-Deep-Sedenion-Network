@@ -29,8 +29,8 @@ import torch.nn as nn
 import torch.distributed as dist
 torch.autograd.set_detect_anomaly(True)
 
-from sedanion_loader import DataGenerator, ToTensor
-from models_sedanion import (SedenionModel, SedenionModelScaled, SedenionModelScaled2,
+from sedenion_loader import DataGenerator, ToTensor
+from models_sedenion import (SedenionModel, SedenionModelScaled, SedenionModelScaled2,
                                                       optimizer_dict, criterion_dict)
 import tempfile
 from torch.nn.parallel import DistributedDataParallel as DDP
@@ -95,7 +95,7 @@ parser.add_argument('--model_num', type=int, default=1, choices=[1, 2, 3, 4])
 
 opts = parser.parse_args()
 
-net_dict = {'seda': 'sedanion', 'octo': 'octonion', 'quat': 'quaternion', 'comp': 'complex', 'real': 'real'}
+net_dict = {'sede': 'sedenion', 'octo': 'octonion', 'quat': 'quaternion', 'comp': 'complex', 'real': 'real'}
 net_type = net_dict[opts.net_type.lower()[:4]]
 
 city_name = opts.city.upper()
